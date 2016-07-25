@@ -2,6 +2,8 @@ import re
 from parsimonious.grammar import Grammar
 import parsimonious.exceptions
 
+from objects import Atom
+
 class ParseError(Exception):
     pass
 
@@ -21,8 +23,9 @@ def transform(ast):
         return [ast.text[1:-1].replace(r'\"', '"')] # "something"
     elif ast.expr_name == "binary":
         return [ast.text[3:-3].replace(r'\"', '"')] # <<"something">>
-    elif ast.expr_name == "atom": 
-        return [ast.text]
+    elif ast.expr_name == "atom":
+        text = ast.text[1:-1] if ast.text.startswith("'") else ast.text
+        return [Atom(text)]
     else:
         lis = reduce(lambda a, x: a + transform(x), ast.children, [])
         if ast.expr_name == "list":

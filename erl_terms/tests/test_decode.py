@@ -1,8 +1,11 @@
+# -*- coding: utf8 -*-
+
 from unittest import TestCase
 
 from nose.tools import eq_
 
 from erl_terms.erl_terms_core import decode
+from erl_terms.objects import Atom
 
 class DecodeEverythingTests(TestCase):
     """Tests for atoms, strings, lists and so on"""
@@ -17,7 +20,8 @@ class DecodeEverythingTests(TestCase):
         eq_(decode('true.'), [True])
         eq_(decode('false.'), [False])
         eq_(decode('16#FF.'), [255])
-        eq_(decode('atom.'), ['atom'])
+        eq_(decode('atom.'), [Atom('atom')])
+        eq_(decode('\'this is an atôm\'.'), [Atom('this is an atôm')])
         eq_(decode('"String".'), ['String'])
         eq_(decode('<<"Binary">>.'), ['Binary'])
 
@@ -40,15 +44,15 @@ class DecodeEverythingTests(TestCase):
 
     def test_map(self):
         eq_(decode('#{}.'), [{}])
-        eq_(decode('#{ a=>1}.'), [{"a":1}])
-        eq_(decode('#{a =>1, b=>2, c=>3}.'), [{"a":1, "b":2, "c":3}])
-        eq_(decode('#{a=> #{a=>1, b => 2}, b=>2}.'), [{"a":{"a":1, "b":2}, "b":2}])
+        eq_(decode('#{ a=>1}.'), [{Atom('a'):1}])
+        eq_(decode('#{a =>1, b=>2, c=>3}.'), [{Atom('a'):1, Atom('b'):2, Atom('c'):3}])
+        eq_(decode('#{a=> #{a=>1, b => 2}, b=>2}.'), [{Atom('a'):{Atom('a'):1, Atom('b'):2}, Atom('b'):2}])
 
     def test_complex(self):
         eq_(decode('[{outer_key, #{"inner_key" => [whatever]}}, {<<"another_outer_key">>, false}]. punchline.'),
-            [[('outer_key', {'inner_key': ['whatever']}),
-              ('another_outer_key', False)],
-             'punchline'])
+            [[(Atom('outer_key'), {'inner_key': [Atom('whatever')]}),
+              ("another_outer_key",  False)],
+             Atom('punchline')])
 
     def test_complex2(self):
         eq_(decode('["foo", <<"bar">>].'),
