@@ -2,7 +2,7 @@ import re
 from parsimonious.grammar import Grammar
 import parsimonious.exceptions
 
-from objects import Atom
+from objects import Atom, Proplist
 
 class ParseError(Exception):
     pass
@@ -29,6 +29,14 @@ def transform(ast):
     else:
         lis = reduce(lambda a, x: a + transform(x), ast.children, [])
         if ast.expr_name == "list":
+            # if list only contains tuples with at least 2 values, we transform it to a proplist
+            # (kind of dictionary)
+            # TODO: allow single atoms (equivalent of {atom, true}
+            #
+            notuples = [elt for elt in lis if not isinstance(elt,tuple) or len(elt) != 2]
+            if len(lis) > 0 and len(notuples) == 0:
+                return [Proplist(lis)]
+
             return [lis]
         elif ast.expr_name == "map":
             return [dict(lis)]
@@ -42,7 +50,7 @@ def lex(text):
     entry = (term _ "." _)* _
     term = boolean / atom / list / tuple / map / string / binary / number
     atom = ~"[a-z][0-9a-zA-Z_]*" / ("'" ~"[^']*" "'")
-    _ = ~"\s*" 
+    _ = ~"\s*"
     list = ( _ "[" _ term (_ "," _ term)* _ "]" ) / ( _ "[" _ "]")
     tuple = ( _ "{" _ term (_ "," _ term)* _ "}" ) / ( _ "{" _ "}")
     map   = ( _ "#{" _ keyvalue (_ "," _ keyvalue)* _ "}" ) / ( _ "#{" _ "}")

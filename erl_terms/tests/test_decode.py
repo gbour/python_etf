@@ -5,7 +5,7 @@ from unittest import TestCase
 from nose.tools import eq_
 
 from erl_terms.erl_terms_core import decode
-from erl_terms.objects import Atom
+from erl_terms.objects import Atom, Proplist
 
 class DecodeEverythingTests(TestCase):
     """Tests for atoms, strings, lists and so on"""
@@ -37,6 +37,10 @@ class DecodeEverythingTests(TestCase):
         eq_(decode('{18, 4, 9}.'), [(18, 4, 9)])
         eq_(decode('{{18, 4}, 9}.'), [((18, 4), 9)])
 
+    def test_proplist(self):
+        eq_(decode('[{foo, bar}, {"string", 42}].'), [Proplist({Atom('foo'): Atom('bar'), "string": 42})])
+        eq_(decode('[{foo, bar}, baz].'), [[(Atom('foo'), Atom('bar')), Atom('baz')]])
+
     def test_string(self):
         eq_(decode('"ohai".'), [('ohai')])
         eq_(decode(r'"password:\"123\"".'), [('password:"123"')])
@@ -50,8 +54,8 @@ class DecodeEverythingTests(TestCase):
 
     def test_complex(self):
         eq_(decode('[{outer_key, #{"inner_key" => [whatever]}}, {<<"another_outer_key">>, false}]. punchline.'),
-            [[(Atom('outer_key'), {'inner_key': [Atom('whatever')]}),
-              ("another_outer_key",  False)],
+            [Proplist({Atom('outer_key'): {'inner_key': [Atom('whatever')]},
+              "another_outer_key":  False}),
              Atom('punchline')])
 
     def test_complex2(self):
