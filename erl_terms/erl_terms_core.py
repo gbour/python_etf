@@ -1,8 +1,10 @@
-import re
+import re, os
+import cStringIO
 from parsimonious.grammar import Grammar
 import parsimonious.exceptions
 
 from objects import Atom, Proplist
+from serializer import serialize
 
 class ParseError(Exception):
     pass
@@ -69,3 +71,25 @@ def lex(text):
 
 def decode(text):
     return transform(lex(text))
+
+
+def encode(vals, pretty=False):
+    out = cStringIO.StringIO()
+
+    cr = sp = ''
+    csp = ' '
+    if pretty:
+        cr  = '\n'  # carriage return
+        sp  = '  '  # alignment space
+        csp = ''    # after-comma space
+
+    for elt in vals:
+        serialize(elt, out=out, pretty=pretty, cr=cr, sp=sp, csp=csp, depth=0)
+        out.writelines(['.',csp,cr])
+
+    if not pretty:
+        # removing last space
+        out.seek(-1, os.SEEK_END); out.truncate()
+    return out.getvalue()
+
+
