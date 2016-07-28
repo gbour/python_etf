@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 
 class Atom(str):
     def __eq__(self, other):
@@ -12,3 +13,12 @@ class Atom(str):
 class Proplist(dict):
     def __eq__(self, other):
         return isinstance(other, Proplist) and super(Proplist, self).__eq__(other)
+
+    # do a search for key as atom
+    def __getattr__(self, key):
+        return self.get(Atom(key), None)
+
+    # set value (key as atom)
+    def __setattr__(self, key, value):
+        self[Atom(key)] = value
+
